@@ -37,7 +37,7 @@ while cursor < len(program):
     char = program[cursor]
     if char == " ":
         break
-    if char not in "?!냥냐.,~-":
+    if char not in "?!냥냐.,~-뀨":
         raise ValueError(f"Invalid character {char}")
     match char:
         case "?":
@@ -58,5 +58,7 @@ while cursor < len(program):
         case "-":
             if memory.get(pointer, 0) != 0:
                 cursor = jump_points[cursor]
+        case "뀨":
+            print(memory.get(pointer, 0))
 
     cursor += 1
