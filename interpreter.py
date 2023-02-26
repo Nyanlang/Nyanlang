@@ -51,7 +51,7 @@ while cursor < len(program):
         case ".":
             print(chr(memory.get(pointer, 0)), end="")
         case ",":
-            memory[pointer] = pointer
+            memory[pointer] = ord((lambda ip: ip[0] if len(ip) >= 1 else 0)(input()))
         case "~":
             if memory.get(pointer, 0) == 0:
                 cursor = next_points[cursor]
