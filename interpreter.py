@@ -16,18 +16,24 @@ with open(filename, "r") as f:
 jump_points = {}
 next_points = {}
 
+
+def find_matchpoint(start_pair):
+    next_to = -1
+    for i in range(start_pair+1, len(program)):
+        if i <= next_to:
+            continue
+        if program[i] == "-":
+            jump_points[i] = start_pair
+            next_points[start_pair] = i
+            return i
+        if program[i] == "~":
+            next_to = find_matchpoint(i)
+    raise SyntaxError("No matching - for ~")
+
+
 for i in range(len(program)):
-    checked_i = False
-    if program[i] != "~":
-        continue
-    for j in range(1, len(program)+1):
-        if program[-j] == "-":
-            jump_points[len(program)-j] = i
-            next_points[i] = len(program)-j
-            checked_i = True
-            break
-    if not checked_i:
-        raise ValueError("~ without -")
+    if program[i] == "~":
+        find_matchpoint(i)
 
 
 pointer = 0
