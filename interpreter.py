@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 
 if len(sys.argv) == 1:
     raise ValueError("Usage: python interpreter.py <filename>")
@@ -10,7 +11,7 @@ if not os.path.exists(filename):
     raise FileNotFoundError(f"File {filename} not found")
 
 with open(filename, "r") as f:
-    program = f.read().replace("\n", "").replace(" ", "") + " "
+    program = re.sub(r'".*?"', "", f.read().replace("\n", "").replace(" ", "") + " ")
 
 jump_points = {}
 next_points = {}
