@@ -33,4 +33,4 @@ def help_generator(child: str, *params: Param) -> str:
         param_help += f"{param.description_name}:\n"
         param_help += "\n".join(["  "+f"{item.name} - {item.desc}" for item in param.items])
 
-    return _base + f" {child} {' '.join([f'<{pk.command_name}>' for pk in params])}" + param_help
+    return _base + f" {child} {' '.join([f'{pk.command_name}' for pk in params])}" + param_help
