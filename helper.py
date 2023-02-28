@@ -15,7 +15,7 @@ class Param:
             optional: bool = False,
             kw: str = None
     ):
-        self.command_name = f"[{command_name}]" if optional else f"<{command_name}>"
+        self.command_name = f"[{command_name}?]" if optional else f"<{command_name}>"
         self.description_name = description_name
         self.items: tuple[ParamItem] = items
         self.no = no_desc
