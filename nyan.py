@@ -92,7 +92,7 @@ def run(filename):
             case ".":
                 print(chr(memory.get(pointer, 0)), end="")
             case ",":
-                memory[pointer] = ord((lambda ip: ip[0] if len(ip) >= 1 else 0)(input()))
+                memory[pointer] = ord((lambda ip: ip[0])(i if (i := input()) else "\x00"))
             case "~":
                 if memory.get(pointer, 0) == 0:
                     cursor = next_points[cursor]
