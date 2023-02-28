@@ -93,6 +93,8 @@ match sys.argv:
     case [_, "run"]:
         return_(HELP["run"])
     case [_, "run", *f]:
+        if ' '.join(f).split(".")[-1] != "nyan":
+            raise ValueError(f"Invalid file extension .{' '.join(f).split('.')[-1]} - File extension must be .nyan")
         run(' '.join(f))
     case _:
         raise ValueError(f"Invalid command {sys.argv}")
