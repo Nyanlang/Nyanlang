@@ -1,5 +1,6 @@
 import sys
 import os
+import pathlib
 import re
 from helper import Param, ParamItem
 from helper import help_generator as helper
@@ -28,6 +29,10 @@ HELP = {
         Param("filename", "", no_desc=True),
         Param("destination", "", no_desc=True, optional=True, kw="dest")
     )
+}
+
+LANG = {
+    "bf": ["b", "bf"]
 }
 
 
@@ -98,6 +103,10 @@ def run(filename):
         cursor += 1
 
 
+def translate(lang, src, dest):
+    print(f"Translating '{src}' to '{dest}'...")
+
+
 match sys.argv:
     case [_]:
         return_(HELP["_"])
@@ -112,6 +121,27 @@ match sys.argv:
     case [_, "translate", language]:
         return_(HELP["translate"])
     case [_, "translate", language, *f]:
-        pass
+        _dest = None
+        if "--dest" in f:
+            _dest = pathlib.Path(' '.join(f[f.index("--dest")+1:]))
+            f = f[:f.index("--dest")]
+
+        if language not in LANG:
+            raise ValueError(f"Invalid language {language}")
+
+        if ' '.join(f).split(".")[-1] not in LANG[language]:
+            raise ValueError(f"Invalid file extension .{' '.join(f).split('.')[-1]} - "
+                             f"File extension must be {'or'.join(['.'+i for i in LANG[language]])}")
+
+        if not pathlib.Path(" ".join(f)).exists():
+            raise FileNotFoundError(f"File {' '.join(f)} not found")
+
+        if not _dest:
+            _dest = pathlib.Path('.'.join(" ".join(f).split(".")[:-1] + ["nyan"]))
+
+        if _dest.exists():
+            raise FileExistsError(f"File {_dest} already exists")
+
+        translate(language, " ".join(f), _dest)
     case _:
         raise ValueError(f"Invalid command {sys.argv}")
