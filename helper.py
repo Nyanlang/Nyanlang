@@ -1,4 +1,4 @@
-_base = f"Usage: python3.11 {__file__}"
+_base = f"Usage: python {__file__}"
 
 
 class ParamItem:
