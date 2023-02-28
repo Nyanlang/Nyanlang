@@ -107,6 +107,32 @@ def run(filename):
 
 def translate(lang, src, dest):
     print(f"Translating '{src}' to '{dest}'...")
+    match lang:
+        case "bf":
+            mapper = {"<": "!", ">": "?", "+": "냥", "-": "냐", "[": "~", "]": "-", ",": ",", ".": ".", ' ': ' ',
+                      '\n': "\n"}
+            with open(src, "r") as f:
+                origin_program = f.read()
+            source = ""
+            comment_mode = False
+            for char in origin_program:
+                if char not in "<>+-[],. \n":
+                    if not comment_mode:
+                        source += "\""
+                    comment_mode = True
+                    source += char
+                else:
+                    if char == " " and comment_mode:
+                        source += char
+                        continue
+                    if comment_mode:
+                        comment_mode = False
+                        source += "\""
+                    source += mapper[char]
+            if comment_mode:
+                source += "\""
+            with open(dest, "w") as f:
+                f.write(source)
 
 
 match sys.argv:
