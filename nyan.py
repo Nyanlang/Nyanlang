@@ -16,6 +16,15 @@ HELP = {
     "run": helper(
         "run",
         Param("filename", "", no_desc=True)
+    ),
+    "translate": helper(
+        "translate",
+        Param(
+            "language",
+            "Languages",
+            ParamItem("bf", "Brainfuck"),
+        ),
+        Param("filename", "", no_desc=True)
     )
 }
 
@@ -96,5 +105,11 @@ match sys.argv:
         if ' '.join(f).split(".")[-1] != "nyan":
             raise ValueError(f"Invalid file extension .{' '.join(f).split('.')[-1]} - File extension must be .nyan")
         run(' '.join(f))
+    case [_, "translate"]:
+        return_(HELP["translate"])
+    case [_, "translate", language]:
+        return_(HELP["translate"])
+    case [_, "translate", language, *f]:
+        pass
     case _:
         raise ValueError(f"Invalid command {sys.argv}")
