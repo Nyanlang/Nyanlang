@@ -19,8 +19,6 @@ HELP = {
     )
 }
 
-RUN_HELP = f"Usage: python3.11 {__file__} run <filename>"
-
 
 def return_(v, e=1):
     print(v)
