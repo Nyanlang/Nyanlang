@@ -1,6 +1,3 @@
-_base = f"Usage: python {__file__}"
-
-
 class ParamItem:
     def __init__(self, name: str, desc: str):
         self.name = name
@@ -23,14 +20,18 @@ class Param:
             self.command_name = self.command_name[:1] + f"--{kw} " + self.command_name[1:]
 
 
-def help_generator(child: str, *params: Param) -> str:
-    param_help = ""
+class Helper:
+    def __init__(self, file):
+        self._base = f"Usage: python {file}"
 
-    for param in params:
-        if param.no:
-            continue
-        param_help += "\n\n"
-        param_help += f"{param.description_name}:\n"
-        param_help += "\n".join(["  "+f"{item.name} - {item.desc}" for item in param.items])
+    def help(self, child: str, *params: Param) -> str:
+        param_help = ""
 
-    return _base + f" {child} {' '.join([f'{pk.command_name}' for pk in params])}" + param_help
+        for param in params:
+            if param.no:
+                continue
+            param_help += "\n\n"
+            param_help += f"{param.description_name}:\n"
+            param_help += "\n".join(["  "+f"{item.name} - {item.desc}" for item in param.items])
+
+        return self._base + f" {child} {' '.join([f'{pk.command_name}' for pk in params])}" + param_help

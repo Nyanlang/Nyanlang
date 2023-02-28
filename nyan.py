@@ -3,10 +3,12 @@ import os
 import pathlib
 import re
 from helper import Param, ParamItem
-from helper import help_generator as helper
+from helper import Helper
+
+helpgen = Helper(__file__)
 
 HELP = {
-    "_": helper(
+    "_": helpgen.help(
         "",
         Param(
             "command",
@@ -15,11 +17,11 @@ HELP = {
             ParamItem("translate", "Translate a file to nyanlang language from other language")
         )
     ),
-    "run": helper(
+    "run": helpgen.help(
         "run",
         Param("filename", "", no_desc=True)
     ),
-    "translate": helper(
+    "translate": helpgen.help(
         "translate",
         Param(
             "language",
