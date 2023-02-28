@@ -10,7 +10,8 @@ HELP = {
         Param(
             "command",
             "Commands",
-            ParamItem("run", "Run a file")
+            ParamItem("run", "Run a file"),
+            ParamItem("translate", "Translate a file to nyanlang language from other language")
         )
     ),
     "run": helper(
@@ -24,7 +25,8 @@ HELP = {
             "Languages",
             ParamItem("bf", "Brainfuck"),
         ),
-        Param("filename", "", no_desc=True)
+        Param("filename", "", no_desc=True),
+        Param("destination", "", no_desc=True, optional=True, kw="dest")
     )
 }
 
