@@ -3,6 +3,8 @@
 세상에서 제일 귀여운 언어다냥!  
 당연히 Brainfxxk 기반인건 알고 가라냥!
 
+[위키](https://github.com/sserve-kr/Nyanlang/wiki)도 있다냥!!
+
 아래는 비교 표다냥.
 
 
