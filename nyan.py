@@ -2,6 +2,7 @@ import sys
 import os
 import pathlib
 import re
+import sys
 from helper import Param, ParamItem
 from helper import Helper
 
@@ -41,7 +42,6 @@ LANG = {
 def return_(v, e=1):
     print(v)
     exit(e)
-
 
 def run(filename):
     if not os.path.exists(filename):
@@ -92,7 +92,7 @@ def run(filename):
             case ".":
                 print(chr(memory.get(pointer, 0)), end="")
             case ",":
-                memory[pointer] = ord((lambda ip: ip[0])(i if (i := input()) else "\x00"))
+                memory[pointer] = ord(i) if (i := sys.stdin.read(1)) else 0
             case "~":
                 if memory.get(pointer, 0) == 0:
                     cursor = next_points[cursor]
