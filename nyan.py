@@ -1,4 +1,3 @@
-import sys
 import os
 import pathlib
 import re
@@ -43,32 +42,33 @@ def return_(v, e=1):
     print(v)
     exit(e)
 
+
 def run(filename):
     if not os.path.exists(filename):
         raise FileNotFoundError(f"File {filename} not found")
 
-    with open(filename, "r") as f:
-        program = re.sub(r'".*?"', "", f.read().replace("\n", "").replace(" ", "") + " ")
+    with open(filename, "r") as _f:
+        program = re.sub(r'".*?"', "", _f.read().replace("\n", "").replace(" ", "") + " ")
 
     jump_points = {}
     next_points = {}
 
-    def find_matchpoint(start_pair):
+    def find_match(start_pair):
         next_to = -1
-        for i in range(start_pair+1, len(program)):
-            if i <= next_to:
+        for j in range(start_pair+1, len(program)):
+            if j <= next_to:
                 continue
-            if program[i] == "-":
-                jump_points[i] = start_pair
-                next_points[start_pair] = i
-                return i
-            if program[i] == "~":
-                next_to = find_matchpoint(i)
+            if program[j] == "-":
+                jump_points[j] = start_pair
+                next_points[start_pair] = j
+                return j
+            if program[j] == "~":
+                next_to = find_match(j)
         raise SyntaxError("No matching - for ~")
 
     for i in range(len(program)):
         if program[i] == "~":
-            find_matchpoint(i)
+            find_match(i)
 
     pointer = 0
     memory = {}
@@ -111,8 +111,8 @@ def translate(lang, src, dest):
         case "bf":
             mapper = {"<": "!", ">": "?", "+": "냥", "-": "냐", "[": "~", "]": "-", ",": ",", ".": ".", ' ': ' ',
                       '\n': "\n"}
-            with open(src, "r") as f:
-                origin_program = f.read()
+            with open(src, "r") as _f:
+                origin_program = _f.read()
             source = ""
             comment_mode = False
             for char in origin_program:
@@ -131,8 +131,8 @@ def translate(lang, src, dest):
                     source += mapper[char]
             if comment_mode:
                 source += "\""
-            with open(dest, "w") as f:
-                f.write(source)
+            with open(dest, "w") as _f:
+                _f.write(source)
 
 
 match sys.argv:
