@@ -48,7 +48,7 @@ def run(filename):
         raise FileNotFoundError(f"File {filename} not found")
 
     with open(filename, "r") as _f:
-        program = re.sub(r'".*?"', "", _f.read().replace("\n", "").replace(" ", "") + " ")
+        program = re.sub(r'"(.?(\\")?)*?"', "", _f.read().replace("\n", "").replace(" ", "") + " ")
 
     jump_points = {}
     next_points = {}
