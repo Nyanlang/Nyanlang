@@ -170,7 +170,7 @@ class Nyan:
             return
         with open(_mname, "r") as _f:
             for index, line in enumerate(_f.readlines()):
-                mobj = re.match(r"(?P<position>\d+):\s*(?P<filename>.*)\n?", line)
+                mobj = re.match(r"(?P<position>-?\d+):\s*(?P<filename>.*)\n?", line)
                 if mobj:
                     try:
                         _pos = int(mobj.group("position"))
