@@ -54,7 +54,7 @@ LANG = {
 }
 
 
-def run():
+def main():
     match sys.argv:
         case [_]:
             return_(HELP["_"])
@@ -113,4 +113,4 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    main()
