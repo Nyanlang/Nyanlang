@@ -70,13 +70,9 @@ class Communicator:
 
     def send(self, nyan, data):
         if nyan == self.nyan_a:
-            if self.a_to_b_fill:
-                raise ValueError("Port is filled!")
             self.a_to_b = data
             self.a_to_b_fill = True
         elif nyan == self.nyan_b:
-            if self.b_to_a_fill:
-                raise ValueError("Port is filled!")
             self.b_to_a = data
             self.b_to_a_fill = True
         else:
@@ -217,7 +213,7 @@ class Nyan:
                     if self.module_pointer in self.mouses:
                         _received = self.mouses[self.module_pointer].receive(self)
                         if not _received:
-                            return
+                            self.mouses[self.module_pointer].wake_up(self)
                         self.memory[self.pointer] = _received
                 case ".":
                     if self.debug:
