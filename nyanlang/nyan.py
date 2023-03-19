@@ -51,6 +51,11 @@ class Communicator:
             self.nyan_a.run()
 
 
+class CommunitySignal:
+    SEND_WAKE = 0
+    RECEIVE_WAKE = 1
+
+
 class Nyan:
     def __init__(self, filename, subprocess=False, base=None, debug=False):
         self.filename = filename
@@ -160,12 +165,12 @@ class Nyan:
                 case ";":
                     if self.module_pointer in self.mouses:
                         self.mouses[self.module_pointer].send(self, self.memory.get(self.pointer, 0))
-                        self.mouses[self.module_pointer].wake_up(self)
+                        return CommunitySignal.SEND_WAKE, self.module_pointer
                 case ":":
                     if self.module_pointer in self.mouses:
                         _received = self.mouses[self.module_pointer].receive(self)
                         if not _received:
-                            self.mouses[self.module_pointer].wake_up(self)
+                            return CommunitySignal.RECEIVE_WAKE, self.module_pointer
                         self.memory[self.pointer] = _received
                 case ".":
                     if self.debug:
@@ -185,6 +190,25 @@ class Nyan:
 
             self.cursor += 1
         self.EOF = True
+
+
+class NyanEngine:
+    def __init__(self, root: Nyan):
+        self.root = root
+
+    def run(self, nyan: Nyan = None):
+        if not nyan:
+            nyan = self.root
+        while not nyan.EOF:
+            signal, mouse_pointer = nyan.run()
+            if signal == CommunitySignal.SEND_WAKE:
+                if mouse_pointer == 0:
+                    return
+                nyan.mouses[mouse_pointer].wake_up(nyan)
+            elif signal == CommunitySignal.RECEIVE_WAKE:
+                if mouse_pointer == 0:
+                    return
+                nyan.mouses[mouse_pointer].wake_up(nyan)
 
 
 def translate(lang, src, dest):
