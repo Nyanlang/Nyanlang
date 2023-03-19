@@ -85,7 +85,7 @@ def main():
 
             translate(language, f, _dest)
         case _:
-            raise ValueError(f"Invalid command {sys.argv}")
+            raise ValueError(f"Invalid command \"{' '.join(sys.argv)}\"")
 
 
 if __name__ == "__main__":
