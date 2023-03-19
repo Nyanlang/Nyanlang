@@ -9,7 +9,7 @@ readme = "README.md"
 python = "^3.10"
 
 [tool.poetry.scripts]
-nyan = "nyanlang:run"
+nyan = "nyanlang:main"
 
 [build-system]
 requires = ["poetry-core"]

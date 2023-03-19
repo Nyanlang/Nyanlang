@@ -22,7 +22,8 @@ class Param:
 
 class Helper:
     def __init__(self, file):
-        self._base = f"Usage: python {file}"
+        self.file = file
+        self._base = f"Usage: nyan"
 
     def help(self, child: str, *params: Param) -> str:
         param_help = ""
