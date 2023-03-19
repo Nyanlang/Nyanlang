@@ -233,7 +233,7 @@ class Nyan:
                     if self.memory.get(self.pointer, 0) != 0:
                         self.cursor = self.jump_points[self.cursor]
                 case "뀨":
-                    print(self.memory.get(self.pointer, 0))
+                    print("{" + str(self.memory.get(self.pointer, 0)) + "}", end="")
 
             self.cursor += 1
         self.EOF = True
