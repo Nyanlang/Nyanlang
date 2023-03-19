@@ -84,8 +84,11 @@ def main():
                 raise FileExistsError(f"File {_dest} already exists")
 
             translate(language, f, _dest)
-        case _:
-            raise ValueError(f"Invalid command \"{' '.join(sys.argv)}\"")
+        case cmd:
+            try:
+                __import__("nyan-ext-"+cmd[1]).run()
+            except ModuleNotFoundError:
+                return_(f"Invalid command \"{sys.argv[1]}\"")
 
 
 if __name__ == "__main__":
