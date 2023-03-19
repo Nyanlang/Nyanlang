@@ -40,13 +40,6 @@ HELP = {
         Param("filename", "", no_desc=True),
         Param("destination", "", no_desc=True, optional=True, kw="dest")
     ),
-    # "visual": helpgen.help(
-    #     "visual",
-    #     Param("filename", "", no_desc=True),
-    #     Param("max_cols", "", no_desc=True, optional=True, kw="cols"),
-    #     Param("width", "", no_desc=True, optional=True, kw="w"),
-    #     Param("height", "", no_desc=True, optional=True, kw="h"),
-    # )
 }
 
 LANG = {
@@ -91,23 +84,6 @@ def main():
                 raise FileExistsError(f"File {_dest} already exists")
 
             translate(language, f, _dest)
-        # case [_, "visual"]:
-        #     return_(HELP["visual"])
-        # case [_, "visual", f, *options]:
-        #     _cols = None
-        #     if "--cols" in options:
-        #         _cols = int(options[options.index("--cols")+1])
-
-        #     _w = None
-        #     if "--w" in options:
-        #         _w = int(options[options.index("--w")+1])
-
-        #     _h = None
-        #     if "--h" in options:
-        #         _h = int(options[options.index("--h")+1])
-
-        #     if f.split(".")[-1] != "nyan":
-        #         raise ValueError(f"Invalid file extension .{f.split('.')[-1]} - File extension must be .nyan")
         case _:
             raise ValueError(f"Invalid command {sys.argv}")
 
