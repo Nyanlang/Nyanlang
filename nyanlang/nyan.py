@@ -54,6 +54,8 @@ class Communicator:
 class CommunitySignal:
     SEND_WAKE = 0
     RECEIVE_WAKE = 1
+    MAIN_EOF = 2
+    SUB_EOF = 3
 
 
 class Nyan:
@@ -80,8 +82,6 @@ class Nyan:
         self.jump_points = {}
         self.next_points = {}
 
-        self.EOF = False
-
         self.sub = subprocess
 
     def init(self):
@@ -90,6 +90,12 @@ class Nyan:
         self.find_mouse_info()
         self.initialized = True
         return self
+
+    def reset(self):
+        self.cursor = 0
+        self.memory = {}
+        self.pointer = 0
+        self.module_pointer = 0
 
     def parse_program(self):
         if self.filename.split(".")[-1] != "nyan":
@@ -189,7 +195,9 @@ class Nyan:
                     print("{" + str(self.memory.get(self.pointer, 0)) + "}", end="")
 
             self.cursor += 1
-        self.EOF = True
+        if self.sub:
+            return CommunitySignal.SUB_EOF, self.module_pointer
+        return CommunitySignal.MAIN_EOF, self.module_pointer
 
 
 class NyanEngine:
@@ -199,16 +207,22 @@ class NyanEngine:
     def run(self, nyan: Nyan = None):
         if not nyan:
             nyan = self.root
-        while not nyan.EOF:
+        while True:
             signal, mouse_pointer = nyan.run()
-            if signal == CommunitySignal.SEND_WAKE:
-                if mouse_pointer == 0:
+            match signal:
+                case CommunitySignal.SEND_WAKE:
+                    if nyan.sub and mouse_pointer == 0:
+                        return
+                    nyan.mouses[mouse_pointer].wake_up(nyan)
+                case CommunitySignal.RECEIVE_WAKE:
+                    if nyan.sub and mouse_pointer == 0:
+                        return
+                    nyan.mouses[mouse_pointer].wake_up(nyan)
+                case CommunitySignal.SUB_EOF:
+                    nyan.reset()
                     return
-                nyan.mouses[mouse_pointer].wake_up(nyan)
-            elif signal == CommunitySignal.RECEIVE_WAKE:
-                if mouse_pointer == 0:
+                case CommunitySignal.MAIN_EOF:
                     return
-                nyan.mouses[mouse_pointer].wake_up(nyan)
 
 
 def translate(lang, src, dest):
