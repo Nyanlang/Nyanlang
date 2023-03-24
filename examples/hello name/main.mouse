@@ -1,1 +1,2 @@
-0:  name print.nyan
+0->0: modules/name print.nyan
+1->0: modules/special character print.nyan

@@ -1,7 +1,10 @@
 import os
-import pathlib
+from pathlib import Path
 import re
 import sys
+import logging
+
+logging.basicConfig(level=logging.ERROR)
 
 
 # @dataclass
@@ -44,11 +47,13 @@ class Communicator:
         else:
             raise ValueError("Invalid nyan")
 
-    def wake_up(self, nyan):
+    def get_nyan(self, nyan):
         if nyan == self.nyan_a:
-            self.nyan_b.run()
-        if nyan == self.nyan_b:
-            self.nyan_a.run()
+            return self.nyan_b
+        elif nyan == self.nyan_b:
+            return self.nyan_a
+        else:
+            raise ValueError("Invalid nyan")
 
 
 class CommunitySignal:
@@ -59,16 +64,11 @@ class CommunitySignal:
 
 
 class Nyan:
-    def __init__(self, filename, subprocess=False, base=None, debug=False):
+    def __init__(self, filename: Path, subprocess=False, debug=False):
         self.filename = filename
         if not os.path.exists(filename):
             raise FileNotFoundError(f"File \"{filename}\" not found")
         self.initialized = False
-
-        if base:
-            self.base = base
-        else:
-            self.base = os.path.dirname(filename)+"/"
 
         self.program = None
         self.debug = debug
@@ -77,7 +77,9 @@ class Nyan:
         self.memory = {}
         self.pointer = 0
         self.module_pointer = 0
-        self.mouses = {}
+        self.pointing_parents = False
+        self.children = {}
+        self.parents = {}
 
         self.jump_points = {}
         self.next_points = {}
@@ -87,7 +89,6 @@ class Nyan:
     def init(self):
         self.parse_program()
         self.parse_loop_points()
-        self.find_mouse_info()
         self.initialized = True
         return self
 
@@ -97,13 +98,21 @@ class Nyan:
         self.pointer = 0
         self.module_pointer = 0
 
+    def add_parent(self, parent: Communicator, pos: int):
+        if pos in self.parents:
+            raise ValueError("Parent cat already exists")
+        self.parents[pos] = parent
+
+    def add_child(self, child: Communicator, pos: int):
+        if pos in self.children:
+            raise ValueError("Child cat already exists")
+        self.children[pos] = child
+
     def parse_program(self):
-        if self.filename.split(".")[-1] != "nyan":
-            raise ValueError(f"Invalid file extension .{self.filename.split('.')[-1]} - File extension must be .nyan")
+        if self.filename.suffix != ".nyan":
+            raise ValueError(f"Invalid file extension {self.filename.suffix} - File extension must be .nyan")
         with open(self.filename, "r") as _f:
             self.program = re.sub(r'"(.?(\\")?)*?"', "", _f.read().replace("\n", "").replace(" ", "")) + " "
-        if not self.sub:
-            os.chdir(os.path.dirname(self.filename))
 
     def parse_loop_points(self):
         def _find_match(start_pair):
@@ -123,29 +132,6 @@ class Nyan:
             if self.program[i] == "~":
                 _find_match(i)
 
-    def find_mouse_info(self):
-        _mname = ".".join(self.filename.replace(self.base, "").split(".")[:-1] + ["mouse"])
-        if not os.path.exists(_mname):
-            return
-        with open(_mname, "r") as _f:
-            for index, line in enumerate(_f.readlines()):
-                mobj = re.match(r"(?P<position>-?\d+):\s*(?P<filename>.*)\n?", line)
-                if mobj:
-                    try:
-                        _pos = int(mobj.group("position"))
-                    except ValueError:
-                        raise ValueError(f"Invalid mouse position in line {index} - {mobj.group('position')}")
-                    if self.sub and _pos == 0:
-                        raise ValueError(f"Mouse position 0 is not allowed in module file")
-                    _new = Nyan(mobj.group("filename"), subprocess=True, base=self.base, debug=self.debug).init()
-                    self.mouses[_pos] = Communicator(self, _new)
-                    _new.set_origin(self.mouses[_pos])
-                else:
-                    raise SyntaxError(f"Invalid mouse info: line {index}")
-
-    def set_origin(self, origin):
-        self.mouses[0] = origin
-
     def run(self):
         while True:
             char = self.program[self.cursor]
@@ -153,7 +139,7 @@ class Nyan:
                 if not self.sub:
                     print("\n")
                 break
-            if char not in "?!냥냐먕먀.,~-뀨:;":
+            if char not in "?!냥냐먕먀.,~-뀨:;'":
                 raise ValueError(f"Invalid character {char} in file {self.filename}")
             match char:
                 case "?":
@@ -169,15 +155,39 @@ class Nyan:
                 case "먀":
                     self.module_pointer -= 1
                 case ";":
-                    if self.module_pointer in self.mouses:
-                        self.mouses[self.module_pointer].send(self, self.memory.get(self.pointer, 0))
-                        return CommunitySignal.SEND_WAKE, self.module_pointer
+                    if self.pointing_parents:
+                        if self.module_pointer in self.parents:
+                            self.parents[self.module_pointer].send(self, self.memory.get(self.pointer, 0))
+                            self.cursor += 1
+                            return CommunitySignal.SEND_WAKE, self.module_pointer
+                        else:
+                            raise ValueError("Parent cat does not exist")
+                    else:
+                        if self.module_pointer in self.children:
+                            self.children[self.module_pointer].send(self, self.memory.get(self.pointer, 0))
+                            self.cursor += 1
+                            return CommunitySignal.SEND_WAKE, self.module_pointer
+                        else:
+                            raise ValueError("Child cat does not exist")
                 case ":":
-                    if self.module_pointer in self.mouses:
-                        _received = self.mouses[self.module_pointer].receive(self)
-                        if not _received:
-                            return CommunitySignal.RECEIVE_WAKE, self.module_pointer
-                        self.memory[self.pointer] = _received
+                    if self.pointing_parents:
+                        if self.module_pointer in self.parents:
+                            _received = self.parents[self.module_pointer].receive(self)
+                            if not _received:
+                                self.cursor += 1
+                                return CommunitySignal.RECEIVE_WAKE, self.module_pointer
+                            self.memory[self.pointer] = _received
+                        else:
+                            raise ValueError("Parent cat does not exist")
+                    else:
+                        if self.module_pointer in self.children:
+                            _received = self.children[self.module_pointer].receive(self)
+                            if not _received:
+                                self.cursor += 1
+                                return CommunitySignal.RECEIVE_WAKE, self.module_pointer
+                            self.memory[self.pointer] = _received
+                        else:
+                            raise ValueError("Child cat does not exist")
                 case ".":
                     if self.debug:
                         print("{" + str(self.memory.get(self.pointer, 0)) + "}", end="")
@@ -193,6 +203,8 @@ class Nyan:
                         self.cursor = self.jump_points[self.cursor]
                 case "뀨":
                     print("{" + str(self.memory.get(self.pointer, 0)) + "}", end="")
+                case "'":
+                    self.pointing_parents = not self.pointing_parents
 
             self.cursor += 1
         if self.sub:
@@ -201,8 +213,54 @@ class Nyan:
 
 
 class NyanEngine:
-    def __init__(self, root: Nyan):
-        self.root = root
+    def __init__(self, root_name: str, *, debug=False):
+        self.debug = debug
+        if self.debug:
+            logging.basicConfig(level=logging.DEBUG)
+
+        self.root = Nyan(Path(root_name).absolute(), debug=self.debug).init()
+        self.references = {}
+
+        self.find_mouse_info()
+
+    def find_mouse_info(self, nyan: Nyan | None = None):
+        if not nyan:
+            _mpath = os.path.join(self.root.filename.parent, self.root.filename.stem + ".mouse")
+        else:
+            _mpath = os.path.join(nyan.filename.parent, nyan.filename.stem + ".mouse")
+        if not os.path.exists(_mpath):
+            return
+        with open(_mpath, "r") as _f:
+            for index, line in enumerate(_f.readlines()):
+                mobj = re.match(r"(?P<position>-?\d+)->(?P<target_pos>-?\d+):\s*(?P<filename>.*)\n?", line)
+                if mobj:
+                    try:
+                        _pos = int(mobj.group("position"))
+                        _tpos = int(mobj.group("target_pos"))
+                    except ValueError:
+                        raise ValueError(f"Invalid mouse position in line {index} - "
+                                         f"{mobj.group('position')} or {mobj.group('target_pos')}")
+                    new_path = Path(
+                        os.path.join(
+                            (self.root.filename.parent if not nyan else nyan.filename.parent),
+                            Path(mobj.group("filename"))
+                        )
+                    ).absolute()
+                    if new_path not in self.references:
+                        _child = Nyan(new_path, subprocess=True, debug=self.debug).init()
+                        self.references[new_path] = _child
+                    else:
+                        _child = self.references[new_path]
+                    if not nyan:
+                        _comm = Communicator(self.root, _child)
+                        self.root.add_child(_comm, _pos)
+                    else:
+                        _comm = Communicator(nyan, _child)
+                        nyan.add_child(_comm, _pos)
+                    _child.add_parent(_comm, _tpos)
+                    self.find_mouse_info(_child)
+                else:
+                    raise SyntaxError(f"Invalid mouse info: line {index}")
 
     def run(self, nyan: Nyan = None):
         if not nyan:
@@ -213,11 +271,11 @@ class NyanEngine:
                 case CommunitySignal.SEND_WAKE:
                     if nyan.sub and mouse_pointer == 0:
                         return
-                    nyan.mouses[mouse_pointer].wake_up(nyan)
+                    self.run(nyan.children[mouse_pointer].get_nyan(nyan))
                 case CommunitySignal.RECEIVE_WAKE:
                     if nyan.sub and mouse_pointer == 0:
                         return
-                    nyan.mouses[mouse_pointer].wake_up(nyan)
+                    self.run(nyan.children[mouse_pointer].get_nyan(nyan))
                 case CommunitySignal.SUB_EOF:
                     nyan.reset()
                     return

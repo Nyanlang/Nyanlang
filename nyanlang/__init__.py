@@ -57,7 +57,7 @@ def main():
             debug = False
             if "--d" in options:
                 debug = True
-            NyanEngine(Nyan(f, debug=debug).init()).run()
+            NyanEngine(f).run()
         case [_, "translate"]:
             return_(HELP["translate"])
         case [_, "translate", _]:
