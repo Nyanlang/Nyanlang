@@ -1,4 +1,4 @@
-from .nyan import Nyan, translate
+from .nyan import Nyan, translate, NyanEngine
 
 from .helper import Param, ParamItem
 from .helper import Helper
@@ -57,7 +57,7 @@ def main():
             debug = False
             if "--d" in options:
                 debug = True
-            Nyan(f, debug=debug).init().run()
+            NyanEngine(Nyan(f, debug=debug).init()).run()
         case [_, "translate"]:
             return_(HELP["translate"])
         case [_, "translate", _]:
