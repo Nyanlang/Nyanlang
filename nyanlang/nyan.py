@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 import sys
 import logging
+from .debugger import Debugger
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -87,10 +88,20 @@ class Nyan:
         self.sub = subprocess
 
     def init(self):
+        # check --debug in argv
+        if "--debug" in sys.argv:
+            self.debug = True
+        if self.debug:
+            self.debug_start()
         self.parse_program()
         self.parse_loop_points()
         self.initialized = True
         return self
+
+
+    def debug_start(self):
+        debugger = Debugger(self)
+        debugger.run()
 
     def reset(self):
         self.cursor = 0
@@ -111,7 +122,7 @@ class Nyan:
     def parse_program(self):
         if self.filename.suffix != ".nyan":
             raise ValueError(f"Invalid file extension {self.filename.suffix} - File extension must be .nyan")
-        with open(self.filename, "r") as _f:
+        with open(self.filename, "r", encoding="UTF8") as _f:
             self.program = re.sub(r'"(.?(\\")?)*?"', "", _f.read().replace("\n", "").replace(" ", "")) + " "
 
     def parse_loop_points(self):

@@ -1,11 +1,13 @@
-from .nyan import Nyan, translate, NyanEngine
-
-from .helper import Param, ParamItem
-from .helper import Helper
-
 import sys
 import pathlib
+import os
 
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+from nyanlang.nyan import Nyan, translate, NyanEngine
+
+from nyanlang.helper import Param, ParamItem
+from nyanlang.helper import Helper
 
 def return_(v, e=1):
     print(v)
@@ -55,9 +57,9 @@ def main():
             return_(HELP["run"])
         case [_, "run", f, *options]:
             debug = False
-            if "--d" in options:
+            if "-d" in options:
                 debug = True
-            NyanEngine(f).run()
+            NyanEngine(f, debug=debug).run()
         case [_, "translate"]:
             return_(HELP["translate"])
         case [_, "translate", _]:

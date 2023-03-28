@@ -7,6 +7,8 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+socketio = "^5.8.0"
+eventlet = "^0.33.3"
 
 [tool.poetry.scripts]
 nyan = "nyanlang:main"
