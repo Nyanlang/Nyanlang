@@ -132,8 +132,99 @@ class Nyan:
             if self.program[i] == "~":
                 _find_match(i)
 
+    def before_run(self):
+        ...
+
+    def after_run(self):
+        ...
+
+    def start_of_loop(self):
+        ...
+
+    def end_of_loop(self):
+        ...
+
+    def pointer_plus_handler(self):
+        self.pointer += 1
+
+    def pointer_minus_handler(self):
+        self.pointer -= 1
+
+    def memory_plus_handler(self):
+        self.memory[self.pointer] = self.memory.get(self.pointer, 0) + 1
+
+    def memory_minus_handler(self):
+        self.memory[self.pointer] = self.memory.get(self.pointer, 0) - 1
+
+    def module_plus_handler(self):
+        self.module_pointer += 1
+
+    def module_minus_handler(self):
+        self.module_pointer -= 1
+
+    def module_read_handler(self):
+        if self.pointing_parents:
+            if self.module_pointer in self.parents:
+                _received = self.parents[self.module_pointer].receive(self)
+                if not _received:
+                    self.cursor += 1
+                    return CommunitySignal.RECEIVE_WAKE, self.module_pointer
+                self.memory[self.pointer] = _received
+            else:
+                raise ValueError("Parent cat does not exist")
+        else:
+            if self.module_pointer in self.children:
+                _received = self.children[self.module_pointer].receive(self)
+                if not _received:
+                    self.cursor += 1
+                    return CommunitySignal.RECEIVE_WAKE, self.module_pointer
+                self.memory[self.pointer] = _received
+            else:
+                raise ValueError("Child cat does not exist")
+
+    def module_write_handler(self):
+        if self.pointing_parents:
+            if self.module_pointer in self.parents:
+                self.parents[self.module_pointer].send(self, self.memory.get(self.pointer, 0))
+                self.cursor += 1
+                return CommunitySignal.SEND_WAKE, self.module_pointer
+            else:
+                raise ValueError("Parent cat does not exist")
+        else:
+            if self.module_pointer in self.children:
+                self.children[self.module_pointer].send(self, self.memory.get(self.pointer, 0))
+                self.cursor += 1
+                return CommunitySignal.SEND_WAKE, self.module_pointer
+            else:
+                raise ValueError("Child cat does not exist")
+
+    def std_in_handler(self):
+        self.memory[self.pointer] = ord(i) if (i := sys.stdin.read(1)) else 0
+
+    def std_out_handler(self):
+        if self.debug:
+            print("{" + str(self.memory.get(self.pointer, 0)) + "}", end="")
+        else:
+            print(chr(self.memory.get(self.pointer, 0)), end="")
+
+    def jumper_start(self):
+        if self.memory.get(self.pointer, 0) == 0:
+            self.cursor = self.next_points[self.cursor]
+
+    def jumper_end(self):
+        if self.memory.get(self.pointer, 0) != 0:
+            self.cursor = self.jump_points[self.cursor]
+
+    def debug_handler(self):
+        print("{" + str(self.memory.get(self.pointer, 0)) + "}", end="")
+
+    def module_control_handler(self):
+        self.pointing_parents = not self.pointing_parents
+
     def run(self):
+        self.before_run()
         while True:
+            self.start_of_loop()
             char = self.program[self.cursor]
             if char == " ":
                 if not self.sub:
@@ -143,70 +234,36 @@ class Nyan:
                 raise ValueError(f"Invalid character {char} in file {self.filename}")
             match char:
                 case "?":
-                    self.pointer += 1
+                    self.pointer_plus_handler()
                 case "!":
-                    self.pointer -= 1
+                    self.pointer_minus_handler()
                 case "냥":
-                    self.memory[self.pointer] = self.memory.get(self.pointer, 0) + 1
+                    self.memory_plus_handler()
                 case "냐":
-                    self.memory[self.pointer] = self.memory.get(self.pointer, 0) - 1
+                    self.memory_minus_handler()
                 case "먕":
-                    self.module_pointer += 1
+                    self.module_plus_handler()
                 case "먀":
-                    self.module_pointer -= 1
+                    self.module_minus_handler()
                 case ";":
-                    if self.pointing_parents:
-                        if self.module_pointer in self.parents:
-                            self.parents[self.module_pointer].send(self, self.memory.get(self.pointer, 0))
-                            self.cursor += 1
-                            return CommunitySignal.SEND_WAKE, self.module_pointer
-                        else:
-                            raise ValueError("Parent cat does not exist")
-                    else:
-                        if self.module_pointer in self.children:
-                            self.children[self.module_pointer].send(self, self.memory.get(self.pointer, 0))
-                            self.cursor += 1
-                            return CommunitySignal.SEND_WAKE, self.module_pointer
-                        else:
-                            raise ValueError("Child cat does not exist")
+                    self.module_write_handler()
                 case ":":
-                    if self.pointing_parents:
-                        if self.module_pointer in self.parents:
-                            _received = self.parents[self.module_pointer].receive(self)
-                            if not _received:
-                                self.cursor += 1
-                                return CommunitySignal.RECEIVE_WAKE, self.module_pointer
-                            self.memory[self.pointer] = _received
-                        else:
-                            raise ValueError("Parent cat does not exist")
-                    else:
-                        if self.module_pointer in self.children:
-                            _received = self.children[self.module_pointer].receive(self)
-                            if not _received:
-                                self.cursor += 1
-                                return CommunitySignal.RECEIVE_WAKE, self.module_pointer
-                            self.memory[self.pointer] = _received
-                        else:
-                            raise ValueError("Child cat does not exist")
+                    self.module_read_handler()
                 case ".":
-                    if self.debug:
-                        print("{" + str(self.memory.get(self.pointer, 0)) + "}", end="")
-                    else:
-                        print(chr(self.memory.get(self.pointer, 0)), end="")
+                    self.std_out_handler()
                 case ",":
-                    self.memory[self.pointer] = ord(i) if (i := sys.stdin.read(1)) else 0
+                    self.std_in_handler()
                 case "~":
-                    if self.memory.get(self.pointer, 0) == 0:
-                        self.cursor = self.next_points[self.cursor]
+                    self.jumper_start()
                 case "-":
-                    if self.memory.get(self.pointer, 0) != 0:
-                        self.cursor = self.jump_points[self.cursor]
+                    self.jumper_end()
                 case "뀨":
-                    print("{" + str(self.memory.get(self.pointer, 0)) + "}", end="")
+                    self.debug_handler()
                 case "'":
-                    self.pointing_parents = not self.pointing_parents
+                    self.module_control_handler()
 
             self.cursor += 1
+            self.end_of_loop()
         if self.sub:
             return CommunitySignal.SUB_EOF, self.module_pointer
         return CommunitySignal.MAIN_EOF, self.module_pointer
