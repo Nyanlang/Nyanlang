@@ -38,7 +38,7 @@ HELP = {
             ParamItem("bf", "Brainfuck"),
         ),
         Param("filename", "", no_desc=True),
-        Param("destination", "", no_desc=True, optional=True, kw="dest")
+        Param("dest", "", no_desc=True, optional=True, kw="d")
     ),
 }
 
@@ -55,7 +55,7 @@ def main():
             return_(HELP["run"])
         case [_, "run", f, *options]:
             debug = False
-            if "-d" in options:
+            if "-d" in options or "--debug" in options:
                 debug = True
             NyanEngine(f, debug=debug).run()
         case [_, "translate"]:
@@ -64,8 +64,10 @@ def main():
             return_(HELP["translate"])
         case [_, "translate", language, f, *options]:
             _dest = None
+            if "-d" in options:
+                _dest = pathlib.Path(options[options.index("-d") + 1])
             if "--dest" in options:
-                _dest = pathlib.Path(options[options.index("--dest")+1])
+                _dest = pathlib.Path(options[options.index("--dest") + 1])
 
             if language not in LANG:
                 raise ValueError(f"Invalid language {language}")
