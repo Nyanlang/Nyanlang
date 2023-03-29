@@ -64,27 +64,26 @@ class CommunitySignal:
 
 
 class Nyan:
-    filename: Path = None
-    initialized: bool = False
-    program: str = None
-    debug: bool = False
-    cursor: int = 0
-    memory: dict = {}
-    pointer: int = 0
-    module_pointer: int = 0
-    pointing_parents: bool = False
-    children: dict = {}
-    parents: dict = {}
-    jump_points: dict = {}
-    next_points: dict = {}
-    sub: bool = False
-    custom_commands: dict = {}
-
     def __init__(self, filename: Path, subprocess=False, debug=False):
         self.filename = filename
+        if not os.path.exists(filename):
+            raise FileNotFoundError(f"File \"{filename}\" not found")
         self.initialized = False
 
+        self.program = None
         self.debug = debug
+
+        self.cursor = 0
+        self.memory = {}
+        self.pointer = 0
+        self.module_pointer = 0
+        self.pointing_parents = False
+        self.children = {}
+        self.parents = {}
+
+        self.jump_points = {}
+        self.next_points = {}
+
         self.sub = subprocess
 
     def init(self):
@@ -110,8 +109,6 @@ class Nyan:
         self.children[pos] = child
 
     def parse_program(self):
-        if not os.path.exists(self.filename):
-            raise FileNotFoundError(f"File \"{self.filename}\" not found")
         if self.filename.suffix != ".nyan":
             raise ValueError(f"Invalid file extension {self.filename.suffix} - File extension must be .nyan")
         with open(self.filename, "r") as _f:
@@ -224,9 +221,6 @@ class Nyan:
     def module_control_handler(self):
         self.pointing_parents = not self.pointing_parents
 
-    def add_command(self, char, handler):
-        self.custom_commands[char] = handler
-
     def run(self):
         self.before_run()
         while True:
@@ -236,7 +230,7 @@ class Nyan:
                 if not self.sub:
                     print("\n")
                 break
-            if char not in "?!냥냐먕먀.,~-뀨:;'"+"".join(self.custom_commands.keys()):
+            if char not in "?!냥냐먕먀.,~-뀨:;'":
                 raise ValueError(f"Invalid character {char} in file {self.filename}")
             match char:
                 case "?":
@@ -267,11 +261,6 @@ class Nyan:
                     self.debug_handler()
                 case "'":
                     self.module_control_handler()
-                case c:
-                    if c in self.custom_commands:
-                        self.custom_commands[c]()
-                    else:
-                        raise ValueError(f"Invalid character {c} in file {self.filename}")
 
             self.cursor += 1
             self.end_of_loop()
