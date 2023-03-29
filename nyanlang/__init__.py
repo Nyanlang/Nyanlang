@@ -55,9 +55,9 @@ def main():
             return_(HELP["run"])
         case [_, "run", f, *options]:
             debug = False
-            if "--d" in options:
+            if "-d" in options:
                 debug = True
-            NyanEngine(f).run()
+            NyanEngine(f, debug=debug).run()
         case [_, "translate"]:
             return_(HELP["translate"])
         case [_, "translate", _]:

@@ -17,7 +17,7 @@ class Param:
         self.items: tuple[ParamItem] = items
         self.no = no_desc
         if kw:
-            self.command_name = self.command_name[:1] + f"--{kw} " + self.command_name[1:]
+            self.command_name = self.command_name[:1] + f"-{kw} | --{self.command_name[1:]}"
 
 
 class Helper:
