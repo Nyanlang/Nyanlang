@@ -1,7 +1,7 @@
-from .nyan import Nyan, translate, NyanEngine
+from nyan import Nyan, translate, NyanEngine
 
-from .helper import Param, ParamItem
-from .helper import Helper
+from helper import Param, ParamItem
+from helper import Helper
 
 import sys
 import pathlib
