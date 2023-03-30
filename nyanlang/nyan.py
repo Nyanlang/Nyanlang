@@ -168,7 +168,7 @@ class Nyan:
                 _received = self.parents[self.module_pointer].receive(self)
                 if not _received:
                     self.cursor += 1
-                    return CommunitySignal.RECEIVE_WAKE, self.module_pointer
+                    return CommunitySignal.RECEIVE_WAKE, self.pointing_parents, self.module_pointer
                 self.memory[self.pointer] = _received
             else:
                 raise ValueError("Parent cat does not exist")
@@ -177,7 +177,7 @@ class Nyan:
                 _received = self.children[self.module_pointer].receive(self)
                 if not _received:
                     self.cursor += 1
-                    return CommunitySignal.RECEIVE_WAKE, self.module_pointer
+                    return CommunitySignal.RECEIVE_WAKE, self.pointing_parents, self.module_pointer
                 self.memory[self.pointer] = _received
             else:
                 raise ValueError("Child cat does not exist")
@@ -187,14 +187,14 @@ class Nyan:
             if self.module_pointer in self.parents:
                 self.parents[self.module_pointer].send(self, self.memory.get(self.pointer, 0))
                 self.cursor += 1
-                return CommunitySignal.SEND_WAKE, self.module_pointer
+                return CommunitySignal.SEND_WAKE, self.pointing_parents, self.module_pointer
             else:
                 raise ValueError("Parent cat does not exist")
         else:
             if self.module_pointer in self.children:
                 self.children[self.module_pointer].send(self, self.memory.get(self.pointer, 0))
                 self.cursor += 1
-                return CommunitySignal.SEND_WAKE, self.module_pointer
+                return CommunitySignal.SEND_WAKE, self.pointing_parents, self.module_pointer
             else:
                 raise ValueError("Child cat does not exist")
 
@@ -276,6 +276,7 @@ class NyanEngine:
             logging.basicConfig(level=logging.DEBUG)
 
         self.root = Nyan(Path(root_name).absolute(), debug=self.debug).init()
+        self.nodetree = []
         self.references = {}
 
         self.find_mouse_info()
@@ -319,25 +320,39 @@ class NyanEngine:
                 else:
                     raise SyntaxError(f"Invalid mouse info: line {index}")
 
-    def run(self, nyan: Nyan = None):
-        if not nyan:
-            nyan = self.root
+    def run(self):
         while True:
-            signal, mouse_pointer = nyan.run()
+            if not self.nodetree:
+                nyan = self.root
+            else:
+                nyan = self.nodetree[-1]
+            signal, parent_mode, mouse_pointer = nyan.run()
             match signal:
-                case CommunitySignal.SEND_WAKE:
-                    if nyan.sub and mouse_pointer == 0:
-                        return
-                    self.run(nyan.children[mouse_pointer].get_nyan(nyan))
+                case CommunitySignal.SEND_WAKE:      
+                    if parent_mode:
+                        points = nyan.parents[mouse_pointer].get_nyan(nyan)
+                    else:
+                        points = nyan.children[mouse_pointer].get_nyan(nyan)
+                    if len(self.nodetree) >= 2 and self.nodetree[-2] == points:
+                        self.nodetree = self.nodetree[:-1]
+                        continue
+                    self.nodetree.append(points)
+                    continue
                 case CommunitySignal.RECEIVE_WAKE:
-                    if nyan.sub and mouse_pointer == 0:
-                        return
-                    self.run(nyan.children[mouse_pointer].get_nyan(nyan))
+                    if parent_mode:
+                        points = nyan.parents[mouse_pointer].get_nyan(nyan)
+                    else:
+                        points = nyan.children[mouse_pointer].get_nyan(nyan)
+                    if len(self.nodetree) >= 2 and self.nodetree[-2] == points:
+                        self.nodetree = self.nodetree[:-1]
+                        continue
+                    self.nodetree.append(points)
+                    continue
                 case CommunitySignal.SUB_EOF:
                     nyan.reset()
-                    return
+                    self.nodetree = self.nodetree[:-1]
+                    continue
                 case CommunitySignal.MAIN_EOF:
                     return
-
 
 
