@@ -6,6 +6,8 @@ import logging
 
 logging.basicConfig(level=logging.ERROR)
 
+_logger = logging.getLogger("NyanEngine")
+
 
 # @dataclass
 # class VisualConfig:
@@ -90,6 +92,7 @@ class Nyan:
         self.parse_program()
         self.parse_loop_points()
         self.initialized = True
+        _logger.debug(f"Nyan \"{self.filename.stem}\" initialized.")
         return self
 
     def reset(self):
@@ -97,6 +100,7 @@ class Nyan:
         self.memory = {}
         self.pointer = 0
         self.module_pointer = 0
+        _logger.debug(f"Nyan \"{self.filename.stem}\" initialized.")
 
     def add_parent(self, parent: Communicator, pos: int):
         if pos in self.parents:
@@ -112,7 +116,7 @@ class Nyan:
         if self.filename.suffix != ".nyan":
             raise ValueError(f"Invalid file extension {self.filename.suffix} - File extension must be .nyan")
         with open(self.filename, "r") as _f:
-            self.program = re.sub(r'"(.?(\\")?)*?"', "", _f.read().replace("\n", "").replace(" ", "")) + " "
+            self.program = re.sub(r'"(.?(\\")?)*?"', "", _f.read().replace("\n", "").replace(" ", "")) + "    "
 
     def parse_loop_points(self):
         def _find_match(start_pair):
@@ -167,7 +171,6 @@ class Nyan:
             if self.module_pointer in self.parents:
                 _received = self.parents[self.module_pointer].receive(self)
                 if not _received:
-                    self.cursor += 1
                     return CommunitySignal.RECEIVE_WAKE, self.pointing_parents, self.module_pointer
                 self.memory[self.pointer] = _received
             else:
@@ -176,7 +179,6 @@ class Nyan:
             if self.module_pointer in self.children:
                 _received = self.children[self.module_pointer].receive(self)
                 if not _received:
-                    self.cursor += 1
                     return CommunitySignal.RECEIVE_WAKE, self.pointing_parents, self.module_pointer
                 self.memory[self.pointer] = _received
             else:
@@ -246,9 +248,11 @@ class Nyan:
                 case "먀":
                     self.module_minus_handler()
                 case ";":
-                    self.module_write_handler()
+                    return self.module_write_handler()
                 case ":":
-                    self.module_read_handler()
+                    _read = self.module_read_handler()
+                    if _read:
+                        return _read
                 case ".":
                     self.std_out_handler()
                 case ",":
@@ -274,6 +278,7 @@ class NyanEngine:
         self.debug = debug
         if self.debug:
             logging.basicConfig(level=logging.DEBUG)
+            _logger.level = logging.DEBUG
 
         self.root = Nyan(Path(root_name).absolute(), debug=self.debug).init()
         self.nodetree = []
@@ -326,9 +331,12 @@ class NyanEngine:
                 nyan = self.root
             else:
                 nyan = self.nodetree[-1]
+            _logger.debug(f"Running {nyan.filename.stem}")
             signal, parent_mode, mouse_pointer = nyan.run()
             match signal:
                 case CommunitySignal.SEND_WAKE | CommunitySignal.RECEIVE_WAKE:
+                    _logger.debug(f"WAKE {'SEND' if signal == CommunitySignal.SEND_WAKE else 'RECEIVE'} SIGNAL SENT "
+                                  f"FROM {nyan.filename.stem}")
                     if parent_mode:
                         points = nyan.parents[mouse_pointer].get_nyan(nyan)
                     else:
@@ -344,5 +352,3 @@ class NyanEngine:
                     continue
                 case CommunitySignal.MAIN_EOF:
                     return
-
-
