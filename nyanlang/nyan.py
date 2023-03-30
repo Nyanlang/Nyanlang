@@ -115,7 +115,7 @@ class Nyan:
     def parse_program(self):
         if self.filename.suffix != ".nyan":
             raise ValueError(f"Invalid file extension {self.filename.suffix} - File extension must be .nyan")
-        with open(self.filename, "r") as _f:
+        with open(self.filename, "r", encoding="utf-8") as _f:
             self.program = re.sub(r'"(.?(\\")?)*?"', "", _f.read().replace("\n", "").replace(" ", "")) + "    "
 
     def parse_loop_points(self):
@@ -293,7 +293,7 @@ class NyanEngine:
             _mpath = os.path.join(nyan.filename.parent, nyan.filename.stem + ".mouse")
         if not os.path.exists(_mpath):
             return
-        with open(_mpath, "r") as _f:
+        with open(_mpath, "r", encoding="utf-8") as _f:
             for index, line in enumerate(_f.readlines()):
                 mobj = re.match(r"(?P<position>-?\d+)->(?P<target_pos>-?\d+):\s*(?P<filename>.*)\n?", line)
                 if mobj:
