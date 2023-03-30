@@ -265,8 +265,8 @@ class Nyan:
             self.cursor += 1
             self.end_of_loop()
         if self.sub:
-            return CommunitySignal.SUB_EOF, self.module_pointer
-        return CommunitySignal.MAIN_EOF, self.module_pointer
+            return CommunitySignal.SUB_EOF, self.pointing_parents, self.module_pointer
+        return CommunitySignal.MAIN_EOF, self.pointing_parents, self.module_pointer
 
 
 class NyanEngine:
@@ -328,17 +328,7 @@ class NyanEngine:
                 nyan = self.nodetree[-1]
             signal, parent_mode, mouse_pointer = nyan.run()
             match signal:
-                case CommunitySignal.SEND_WAKE:      
-                    if parent_mode:
-                        points = nyan.parents[mouse_pointer].get_nyan(nyan)
-                    else:
-                        points = nyan.children[mouse_pointer].get_nyan(nyan)
-                    if len(self.nodetree) >= 2 and self.nodetree[-2] == points:
-                        self.nodetree = self.nodetree[:-1]
-                        continue
-                    self.nodetree.append(points)
-                    continue
-                case CommunitySignal.RECEIVE_WAKE:
+                case CommunitySignal.SEND_WAKE | CommunitySignal.RECEIVE_WAKE:
                     if parent_mode:
                         points = nyan.parents[mouse_pointer].get_nyan(nyan)
                     else:
