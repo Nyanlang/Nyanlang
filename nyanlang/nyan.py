@@ -66,6 +66,8 @@ class CommunitySignal:
 
 
 class Nyan:
+    global_custom_keywords = {}
+
     def __init__(self, filename: Path, subprocess=False, debug=False):
         self.filename = filename
         if not os.path.exists(filename):
@@ -88,6 +90,8 @@ class Nyan:
 
         self.sub = subprocess
 
+        self._instance_custom_keywords = {}
+
     def init(self):
         self.parse_program()
         self.parse_loop_points()
@@ -101,6 +105,13 @@ class Nyan:
         self.pointer = 0
         self.module_pointer = 0
         _logger.debug(f"Nyan \"{self.filename.stem}\" initialized.")
+
+    def add_local_keyword(self, keyword: str, handler: callable):
+        self._instance_custom_keywords[keyword] = handler
+
+    @staticmethod
+    def add_keyword(keyword: str, handler: callable):
+        Nyan.global_custom_keywords[keyword] = handler
 
     def add_parent(self, parent: Communicator, pos: int):
         if pos in self.parents:
@@ -232,8 +243,6 @@ class Nyan:
                 if not self.sub:
                     print("\n")
                 break
-            if char not in "?!냥냐먕먀.,~-뀨:;'":
-                raise ValueError(f"Invalid character {char} in file {self.filename}")
             match char:
                 case "?":
                     self.pointer_plus_handler()
@@ -265,6 +274,13 @@ class Nyan:
                     self.debug_handler()
                 case "'":
                     self.module_control_handler()
+                case char:
+                    if char in self._instance_custom_keywords:
+                        self._instance_custom_keywords[char]()
+                    elif char in self.global_custom_keywords:
+                        self.global_custom_keywords[char]()
+                    else:
+                        raise ValueError(f"Invalid character {char} in file {self.filename}")
 
             self.cursor += 1
             self.end_of_loop()
