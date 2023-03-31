@@ -302,6 +302,10 @@ class NyanEngine:
 
         self.find_mouse_info()
 
+    @staticmethod
+    def add_keyword(keyword: str, handler: callable):
+        Nyan.add_keyword(keyword, handler)
+
     def find_mouse_info(self, nyan: Nyan | None = None):
         if not nyan:
             _mpath = os.path.join(self.root.filename.parent, self.root.filename.stem + ".mouse")
