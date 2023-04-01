@@ -302,6 +302,8 @@ class NyanEngine:
 
         self.find_mouse_info()
 
+        self.nyans = [self.root]
+
     @staticmethod
     def add_keyword(keyword: str, handler: callable):
         Nyan.add_keyword(keyword, handler)
@@ -332,6 +334,7 @@ class NyanEngine:
                     if new_path not in self.references:
                         _child = Nyan(new_path, subprocess=True, debug=self.debug).init()
                         self.references[new_path] = _child
+                        self.nyans.append(_child)
                     else:
                         _child = self.references[new_path]
                     if not nyan:
