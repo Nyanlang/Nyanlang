@@ -104,6 +104,7 @@ class Nyan:
         self.memory = {}
         self.pointer = 0
         self.module_pointer = 0
+        self.pointing_parents = False
         _logger.debug(f"Nyan \"{self.filename.stem}\" initialized.")
 
     def add_local_keyword(self, keyword: str, handler: callable):
