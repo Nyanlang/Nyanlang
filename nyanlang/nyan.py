@@ -3,6 +3,7 @@ from pathlib import Path
 import re
 import sys
 import logging
+import time
 
 logging.basicConfig(level=logging.ERROR)
 
@@ -290,6 +291,29 @@ class Nyan:
         return CommunitySignal.MAIN_EOF, self.pointing_parents, self.module_pointer
 
 
+class TimeSleepNyan(Nyan):
+    def __init__(self, debug=False):
+        self.filename = Path("time.sleep")
+        self.debug = debug
+        self.parents = {}
+
+    def init(self):
+        return self
+
+    def run(self):
+        for c in self.parents:
+            r = self.parents[c].receive(self)
+            if r:
+                _logger.debug(f"Sleeping for {r} ms")
+                time.sleep(r/1000)
+                return CommunitySignal.SUB_EOF, True, c
+
+
+exts = {
+    "time.sleep": TimeSleepNyan
+}
+
+
 class NyanEngine:
     def __init__(self, root_name: str, *, debug=False):
         self.debug = debug
@@ -318,6 +342,7 @@ class NyanEngine:
             return
         with open(_mpath, "r", encoding="utf-8") as _f:
             for index, line in enumerate(_f.readlines()):
+                is_child_ext = False
                 mobj = re.match(r"(?P<position>-?\d+)->(?P<target_pos>-?\d+):\s*(?P<filename>.*)\n?", line)
                 if mobj:
                     try:
@@ -326,18 +351,26 @@ class NyanEngine:
                     except ValueError:
                         raise ValueError(f"Invalid mouse position in line {index} - "
                                          f"{mobj.group('position')} or {mobj.group('target_pos')}")
-                    new_path = Path(
-                        os.path.join(
-                            (self.root.filename.parent if not nyan else nyan.filename.parent),
-                            Path(mobj.group("filename"))
-                        )
-                    ).absolute()
-                    if new_path not in self.references:
-                        _child = Nyan(new_path, subprocess=True, debug=self.debug).init()
-                        self.references[new_path] = _child
-                        self.nyans.append(_child)
+                    if mobj.group("filename") in exts.keys():
+                        is_child_ext = True
+                        if mobj.group("filename") not in self.references:
+                            _child = exts[mobj.group("filename")](debug=self.debug).init()
+                            self.references[mobj.group("filename")] = _child
+                        else:
+                            _child = self.references[mobj.group("filename")]
                     else:
-                        _child = self.references[new_path]
+                        new_path = Path(
+                            os.path.join(
+                                (self.root.filename.parent if not nyan else nyan.filename.parent),
+                                Path(mobj.group("filename"))
+                            )
+                        ).absolute()
+                        if new_path not in self.references:
+                            _child = Nyan(new_path, subprocess=True, debug=self.debug).init()
+                            self.references[new_path] = _child
+                            self.nyans.append(_child)
+                        else:
+                            _child = self.references[new_path]
                     if not nyan:
                         _comm = Communicator(self.root, _child)
                         self.root.add_child(_comm, _pos)
@@ -345,7 +378,8 @@ class NyanEngine:
                         _comm = Communicator(nyan, _child)
                         nyan.add_child(_comm, _pos)
                     _child.add_parent(_comm, _tpos)
-                    self.find_mouse_info(_child)
+                    if not is_child_ext:
+                        self.find_mouse_info(_child)
                 else:
                     raise SyntaxError(f"Invalid mouse info: line {index}")
 
