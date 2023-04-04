@@ -300,9 +300,9 @@ class NyanEngine:
         self.nodetree = []
         self.references = {}
 
-        self.find_mouse_info()
-
         self.nyans = [self.root]
+
+        self.find_mouse_info()
 
     @staticmethod
     def add_keyword(keyword: str, handler: callable):
