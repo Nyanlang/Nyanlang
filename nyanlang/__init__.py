@@ -1,4 +1,4 @@
-from .nyan import Nyan, NyanEngine
+from .nyan import NyanInterpreter, NyanEngine
 
 from .helper import Param, ParamItem
 from .helper import Helper
