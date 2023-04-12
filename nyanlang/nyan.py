@@ -80,7 +80,7 @@ class Pointer:
     def set(self, value: int):
         self._v = value
 
-    def __int__(self):
+    def get(self):
         return self._v
 
 
@@ -91,16 +91,16 @@ class Memory:
         self.memory = initial
 
     def increase(self, pointer: Pointer):
-        self.memory[int(pointer)] = self.memory.get(int(pointer), 0) + 1
+        self.memory[pointer.get()] = self.memory.get(pointer.get(), 0) + 1
 
     def decrease(self, pointer: Pointer):
-        self.memory[int(pointer)] = self.memory.get(int(pointer), 0) - 1
+        self.memory[pointer.get()] = self.memory.get(pointer.get(), 0) - 1
 
     def set(self, pointer: Pointer, value: int):
-        self.memory[int(pointer)] = value
+        self.memory[pointer.get()] = value
 
     def get(self, pointer: Pointer):
-        return self.memory.get(int(pointer), 0)
+        return self.memory.get(pointer.get(), 0)
 
 
 class NyanInterpreter:
@@ -214,19 +214,19 @@ class NyanInterpreter:
     def module_read(self):
         def wrapper(o):
             if o.pointing_parents:
-                if o.module_pointer in o.parents:
-                    _received = o.parents[o.module_pointer].receive(o)
+                if o.module_pointer.get() in o.parents:
+                    _received = o.parents[o.module_pointer.get()].receive(o)
                     if not _received:
-                        return Signals.PAUSE, o.pointing_parents, o.module_pointer
-                    o.memory[o.pointer] = _received
+                        return Signals.PAUSE, o.pointing_parents, o.module_pointer.get()
+                    o.memory.set(o.pointer, _received)
                 else:
                     raise ValueError("Parent cat does not exist")
             else:
-                if o.module_pointer in o.children:
-                    _received = o.children[o.module_pointer].receive(o)
+                if o.module_pointer.get() in o.children:
+                    _received = o.children[o.module_pointer.get()].receive(o)
                     if not _received:
-                        return Signals.PAUSE, o.pointing_parents, o.module_pointer
-                    o.memory[o.pointer] = _received
+                        return Signals.PAUSE, o.pointing_parents, o.module_pointer.get()
+                    o.memory.set(o.pointer, _received)
                 else:
                     raise ValueError("Child cat does not exist")
         self.add_keyword(":")(wrapper)
@@ -234,17 +234,17 @@ class NyanInterpreter:
     def module_write(self):
         def wrapper(o):
             if o.pointing_parents:
-                if o.module_pointer in o.parents:
-                    o.parents[o.module_pointer].send(o, o.memory.get(o.pointer, 0))
+                if o.module_pointer.get() in o.parents:
+                    o.parents[o.module_pointer.get()].send(o, o.memory.get(o.pointer))
                     o.cursor += 1
-                    return Signals.PAUSE, o.pointing_parents, o.module_pointer
+                    return Signals.PAUSE, o.pointing_parents, o.module_pointer.get()
                 else:
                     raise ValueError("Parent cat does not exist")
             else:
-                if o.module_pointer in o.children:
-                    o.children[o.module_pointer].send(o, o.memory.get(o.pointer, 0))
+                if o.module_pointer.get() in o.children:
+                    o.children[o.module_pointer.get()].send(o, o.memory.get(o.pointer))
                     o.cursor += 1
-                    return Signals.PAUSE, o.pointing_parents, o.module_pointer
+                    return Signals.PAUSE, o.pointing_parents, o.module_pointer.get()
                 else:
                     raise ValueError("Child cat does not exist")
         self.add_keyword(";")(wrapper)
@@ -257,7 +257,7 @@ class NyanInterpreter:
 
     def jumper_end(self):
         def wrapper(o):
-            if o.memory.get(o.pointer, 0) != 0:
+            if o.memory.get(o.pointer) != 0:
                 o.cursor = o.jump_points[o.cursor]
         self.add_keyword("-")(wrapper)
 
