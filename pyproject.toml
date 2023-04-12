@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nyanlang"
-version = "1.6.0"
+version = "1.6.1"
 description = "A Cutest Programming Language"
 authors = ["sserve-kr <personal@sserve.me>"]
 readme = "README.md"
