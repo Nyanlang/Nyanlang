@@ -106,8 +106,6 @@ class Memory:
 class NyanInterpreter:
     def __init__(self, filename: Path, subprocess=False, debug=False):
         self.filename = filename
-        if not os.path.exists(filename):
-            raise FileNotFoundError(f"File \"{filename}\" not found")
         self.initialized = False
 
         self.program = None
@@ -176,6 +174,8 @@ class NyanInterpreter:
         self.children[pos] = child
 
     def parse_program(self):
+        if not os.path.exists(self.filename):
+            raise FileNotFoundError(f"File \"{self.filename}\" not found")
         if self.filename.suffix != ".nyan":
             raise ValueError(f"Invalid file extension {self.filename.suffix} - File extension must be .nyan")
         with open(self.filename, "r", encoding="utf-8") as _f:
