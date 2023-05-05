@@ -10,11 +10,11 @@ class Param:
             *items: ParamItem,
             no_desc: bool = False,
             optional: bool = False,
-            kw: str = None
+            kw: str | None = None
     ):
         self.command_name = f"[{command_name}?]" if optional else f"<{command_name}>"
         self.description_name = description_name
-        self.items: tuple[ParamItem] = items
+        self.items: tuple[ParamItem, ...] = items
         self.no = no_desc
         if kw:
             self.command_name = self.command_name[:1] + f"-{kw} | --{self.command_name[1:]}"
